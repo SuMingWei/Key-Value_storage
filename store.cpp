@@ -60,8 +60,6 @@ void get(long long key , string filename){
 }
 
 void scan(long long key1 , long long key2 , string filename){
-    ifstream fin;
-    fstream fout;
     for(long long i=key1;i<key2+1;i++){
         get(i,filename);
     }
