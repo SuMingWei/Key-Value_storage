@@ -7,6 +7,8 @@
 
 using namespace std;
 
+int TLB_MAX = 1000000;
+
 int classify(long long key){
     // spilt to 32 files
     return (int)(key / pow(2,58));
@@ -30,6 +32,33 @@ string get_filename(string s){
         current = next + 1;
     }
     return buffer.at(buffer.size()-1);
+}
+
+void tlb_to_page(long long key, string value, map<long long,string> &TLB){
+    map<long long, string>::iterator iter;
+    fstream fout;
+    int page = classify(key);
+    fout.open("./storage/page"+ to_string(page) +".txt",ios::app);
+    // move all keys that in same page to file
+    fout << key << " " << value << "\n";
+    for(iter = TLB.begin();iter != TLB.end();){
+        if(classify(iter->first) == page){
+            fout << iter->first << " " << iter->second << "\n";
+            TLB.erase(iter++);
+        }else{
+            iter++;
+        }
+    }
+    fout.close();
+}
+
+void put_tlb(long long key,string value, map<long long,string> &TLB){
+    if(TLB.size() < TLB_MAX){
+        TLB[key] = value;
+    }else{
+        // TLB is full
+        tlb_to_page(key,value,TLB);
+    }
 }
 
 void put(long long key,string value){
@@ -118,7 +147,7 @@ int main(int argc,char** argv){
     filename += argv[1];
     filename = filename.substr(0,filename.length()-6);
     filename = get_filename(filename);
-    // memory
+    // memory , max size == 1000000
     map <long long,string> TLB;
     // read input
     ifstream fin;
@@ -127,15 +156,21 @@ int main(int argc,char** argv){
         fin >> readKey;
         if(readString == "PUT"){
             fin >> readValue;
-            put(readKey , readValue);
-        }else if(readString == "GET"){
-            get(readKey , filename);
-        }else if(readString == "SCAN"){
-            fin >> readKey2;
-            scan(readKey , readKey2 , filename);
+            put_tlb(readKey , readValue,TLB);
         }
+        // else if(readString == "GET"){
+        //     get(readKey , filename);
+        // }else if(readString == "SCAN"){
+        //     fin >> readKey2;
+        //     scan(readKey , readKey2 , filename);
+        // }
+        // for(map<long long, string>::iterator it=TLB.begin();it!=TLB.end();it++){
+        //     cout << it->first << " "<< it->second << "\n";
+        // }
+        // cout<<"\n";
 
     }
+    
 
 }
 
