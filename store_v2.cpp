@@ -53,7 +53,7 @@ void tlb_to_page(long long key, string value, map<long long,string> &TLB){
 }
 
 void put_tlb(long long key,string value, map<long long,string> &TLB){
-    if(TLB.size() < TLB_MAX){
+    if(TLB.size() < 2){
         TLB[key] = value;
     }else{
         // TLB is full
@@ -61,12 +61,8 @@ void put_tlb(long long key,string value, map<long long,string> &TLB){
     }
 }
 
-void put(long long key,string value){
-    fstream fout;
-    int page = classify(key);
-    fout.open("./storage/page"+ to_string(page) +".txt",ios::app);
-    fout << key << " " << value << "\n";
-    fout.close();
+void get_tlb(long long key, string filename){
+
 }
 
 void get(long long key , string filename){
@@ -135,6 +131,25 @@ void scan(long long key1 , long long key2 , string filename){
     fout.close();
 }
 
+void flush(map <long long,string> &TLB){
+    fstream fout;
+    for(int i=0;i<32;i++){
+        fout.open("./storage/page"+ to_string(i) +".txt",ios::app);
+        for(map<long long, string>::iterator iter=TLB.begin();iter!=TLB.end();){
+            if(classify(iter->first) == i){
+                fout << iter->first << " " << iter->second << "\n";
+                TLB.erase(iter++);
+            }else{
+                break;
+            }
+        }
+        fout.close();
+        if(TLB.empty()){
+            break;
+        }
+    }
+}
+
 int main(int argc,char** argv){
     string readString;
     long long readKey;
@@ -149,6 +164,7 @@ int main(int argc,char** argv){
     filename = get_filename(filename);
     // memory , max size == 1000000
     map <long long,string> TLB;
+
     // read input
     ifstream fin;
     fin.open(argv[1]);
@@ -170,6 +186,8 @@ int main(int argc,char** argv){
         // cout<<"\n";
 
     }
+    flush(TLB);
+    fin.close();
     
 
 }
