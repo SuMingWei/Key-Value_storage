@@ -8,6 +8,7 @@
 using namespace std;
 
 int TLB_MAX = 1000000;
+int BUFFER_MAX = 1000000;
 
 int classify(long long key){
     // spilt to 32 files
@@ -34,6 +35,28 @@ string get_filename(string s){
     return buffer.at(buffer.size()-1);
 }
 
+// check whether the key is in TLB
+bool is_key_in_map(long long key, map<long long,string> &TLB){
+    map<long long, string>::iterator iter = TLB.find(key);
+    if(iter != TLB.end()){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+// output file
+void output_file(vector<string> &buffer,string filename){
+    fstream fout;
+    fout.open(filename + ".output",ios::app);
+    for(int i=0;i<buffer.size();i++){
+        fout << buffer.at(i) << "\n";
+    }
+    buffer.clear();
+    fout.close();
+}
+
+// put
 void tlb_to_page(long long key, string value, map<long long,string> &TLB){
     map<long long, string>::iterator iter;
     fstream fout;
@@ -53,7 +76,7 @@ void tlb_to_page(long long key, string value, map<long long,string> &TLB){
 }
 
 void put_tlb(long long key,string value, map<long long,string> &TLB){
-    if(TLB.size() < 2){
+    if(TLB.size() < TLB_MAX){
         TLB[key] = value;
     }else{
         // TLB is full
@@ -61,74 +84,53 @@ void put_tlb(long long key,string value, map<long long,string> &TLB){
     }
 }
 
-void get_tlb(long long key, string filename){
-
-}
-
-void get(long long key , string filename){
+// get
+void page_to_tlb(long long key, string &finalValue, map<long long,string> &TLB){
     ifstream fin;
-    fstream fout;
     long long tempKey;
     string tempValue;
-    string finalValue = "EMPTY";
+    map<long long,string> dirty_pair;
     int page = classify(key);
     fin.open("./storage/page" + to_string(page) + ".txt");
     while(fin >> tempKey){
         fin >> tempValue;
+        // get value
         if(tempKey == key){
             finalValue = tempValue;
         }
+        // // move page to TLB
+        // if(is_key_in_map(key,TLB) && is_key_in_map(tempKey,dirty_pair) == false){
+        //     dirty_pair[tempKey] = tempValue;
+        // }
+        if(TLB.size()<TLB_MAX || is_key_in_map(tempKey,TLB)){
+            TLB[tempKey] = tempValue;
+        }
     }
     fin.close();
-    fout.open(filename + ".output",ios::app);
-    fout << finalValue << "\n";
-    fout.close();
 }
 
-void scan(long long key1 , long long key2 , string filename){
-    ifstream fin;
-    fstream fout;
-    long long tempKey;
-    string tempValue;
-    string finalValue[key2 - key1 + 1];
-    int page1 = classify(key1);
-    int page2 = classify(key2);
-
-    for(int i=0;i<key2-key1 + 1;i++){
-        finalValue[i] = "EMPTY";
-    }
-    if(page1 == page2){
-        fin.open("./storage/page" + to_string(page1) + ".txt");
-        while(fin >> tempKey){
-            fin >> tempValue;
-            if(key1 <= tempKey  && tempKey <= key2){
-                finalValue[tempKey - key1] = tempValue;
-            }
-        }
-        fin.close();
+void get_tlb(long long key, vector<string> &output_buffer, map<long long,string> &TLB, string filename){
+    string finalValue = "EMPTY";
+    // check TLB
+    map<long long, string>::iterator iter = TLB.find(key);
+    if(iter != TLB.end()){
+        finalValue = iter->second;
     }else{
-        fin.open("./storage/page" + to_string(page1) + ".txt");
-        while(fin >> tempKey){
-            fin >> tempValue;
-            if(key1 <= tempKey  && tempKey <= key2){
-                finalValue[tempKey - key1] = tempValue;
-            }
-        }
-        fin.close();
-        fin.open("./storage/page" + to_string(page2) + ".txt");
-        while(fin >> tempKey){
-            fin >> tempValue;
-            if(key1 <= tempKey  && tempKey <= key2){
-                finalValue[tempKey - key1] = tempValue;
-            }
-        }
-        fin.close();
+        // the key is not in TLB
+        page_to_tlb(key,finalValue,TLB);
     }
-    fout.open(filename + ".output",ios::app);
-    for(int i=0;i<key2 - key1 + 1;i++){
-        fout << finalValue[i] << "\n";
+    output_buffer.push_back(finalValue);
+    // if buffer is full, then write file 
+    if(output_buffer.size() >= BUFFER_MAX){
+        output_file(output_buffer,filename);
     }
-    fout.close();
+}
+
+// scan
+void scan_tlb(long long key1, long long key2, vector<string> &output_buffer, map<long long,string> &TLB, string filename){
+    for(long long i=key1;i<key2+1;i++){
+        get_tlb(i,output_buffer,TLB,filename);
+    }
 }
 
 void flush(map <long long,string> &TLB){
@@ -164,7 +166,7 @@ int main(int argc,char** argv){
     filename = get_filename(filename);
     // memory , max size == 1000000
     map <long long,string> TLB;
-
+    vector<string> output_buffer;
     // read input
     ifstream fin;
     fin.open(argv[1]);
@@ -173,20 +175,17 @@ int main(int argc,char** argv){
         if(readString == "PUT"){
             fin >> readValue;
             put_tlb(readKey , readValue,TLB);
+        }else if(readString == "GET"){
+            get_tlb(readKey,output_buffer,TLB,filename);
+        }else if(readString == "SCAN"){
+            fin >> readKey2;
+            scan_tlb(readKey,readKey2,output_buffer,TLB,filename);
         }
-        // else if(readString == "GET"){
-        //     get(readKey , filename);
-        // }else if(readString == "SCAN"){
-        //     fin >> readKey2;
-        //     scan(readKey , readKey2 , filename);
-        // }
-        // for(map<long long, string>::iterator it=TLB.begin();it!=TLB.end();it++){
-        //     cout << it->first << " "<< it->second << "\n";
-        // }
-        // cout<<"\n";
-
     }
     flush(TLB);
+    if(output_buffer.empty() == false){
+        output_file(output_buffer,filename);
+    }
     fin.close();
     
 
