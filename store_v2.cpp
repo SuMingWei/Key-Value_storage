@@ -62,11 +62,13 @@ void tlb_to_page(long long key, string value, map<long long,string> &TLB){
     // move all keys that in same page to file
     fout << key << " " << value << "\n";
     for(map<long long, string>::iterator iter = TLB.begin();iter != TLB.end();){
-        if(classify(iter->first) == page){
+        if(classify(iter->first) < page){
+            iter++;
+        }else if(classify(iter->first) == page){
             fout << iter->first << " " << iter->second << "\n";
             TLB.erase(iter++);
-        }else{
-            iter++;
+        }else if(classify(iter->first) > page){
+            break;
         }
     }
     fout.close();
