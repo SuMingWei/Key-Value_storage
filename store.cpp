@@ -92,6 +92,7 @@ int main(int argc,char** argv){
             scan(readKey , readKey2 , filename);
         }
     }
+    return 0;
 
 }
 
