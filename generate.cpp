@@ -89,8 +89,8 @@ int main(int argc, char** argv){
     srand(time(NULL));
     
     //generate_put(27500000);
-    generate_get(27500000);
-    generate_all(27500000);
+    generate_get(175000000);
+    generate_all(55000000);
     return 0;
 
 }
