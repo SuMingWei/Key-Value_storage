@@ -83,14 +83,29 @@ void generate_all(int size){
     fout.close();
 }
 
-
+void generate_scan(int size){
+    ofstream fout;
+    long long head;
+    fout.open("scan.input");
+    for(int i=0;i<size;i++){
+        if(i==size-1){
+            head = randomLongLong();
+            fout << "SCAN " << head << " " << head + (rand()%2) + 1;
+            break;    
+        }
+        head = randomLongLong();
+        fout << "SCAN " << head << " " << head + (rand()%2) + 1 << "\n";
+    }
+    fout.close();
+}
 
 int main(int argc, char** argv){
     srand(time(NULL));
     
     //generate_put(27500000);
-    generate_get(175000000);
-    generate_all(55000000);
+    //generate_get(175000000);
+    //generate_all(55000000);
+    generate_scan(100000000);
     return 0;
 
 }
