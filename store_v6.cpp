@@ -142,7 +142,6 @@ void put_tlb(long long key,string value, vector<long long> &start_key,map<long l
 // get
 void get_tlb(long long key, string &output_buffer, vector<long long> &start_key, map<long long,string> &TLB, string filename,map<long long,string> &ROM,map<int,long long>&page_list){
     string finalValue = "EMPTY";
-    bool full_flag = false;
     int page = classify(key);
     // check TLB and check ROM
     map<long long, string>::iterator iter1 = TLB.find(key);
@@ -177,17 +176,10 @@ void get_tlb(long long key, string &output_buffer, vector<long long> &start_key,
                     finalValue = tempValue;
                 }
                 // move to ROM
-                if(ROM.size() < MAX_ENTRY){
-                    ROM[tempKey] = tempValue;
-                    if(tempKey < page_list[page] || page_list[page] == -1){
-                        page_list[page] = tempKey;
-                    }    
-                }else{
-                    full_flag == true;
-                }
-            }
-            if(full_flag){
-
+                ROM[tempKey] = tempValue;
+                if(tempKey < page_list[page] || page_list[page] == -1){
+                    page_list[page] = tempKey;
+                } 
             }
         }
         fin.close();
