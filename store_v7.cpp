@@ -189,7 +189,6 @@ void get_tlb(long long key, string &output_buffer, vector<long long> &start_key,
             if(check_rom_size(ROM,page_list)){
                 release_rom(ROM,page_list);
             }
-            cout<<ROM_NUM<<"\n";
             // assign page list
             page_list[page] = -1;
             // read page
@@ -210,7 +209,6 @@ void get_tlb(long long key, string &output_buffer, vector<long long> &start_key,
                 }   
             }
             if(full_flag){
-                cout<<"full\n";
                 erase_rom(ROM,page_list,page);
             }
         }
