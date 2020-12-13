@@ -86,12 +86,12 @@ void update(int page,vector<long long> &start_key, map <long long,string> &TLB,m
 
 // check memory
 bool check_rom_size(map<long long,string> &ROM,map<int,long long>&page_list){
-    int current_entry = ROM.size();
-    int average_entry = current_entry / page_list.size(); 
-    int total_entry = current_entry + average_entry;
     if(page_list.size() < ROM_NUM){
         return false;
     }else if(page_list.size() == ROM_NUM){
+        int current_entry = ROM.size();
+        int average_entry = current_entry / page_list.size(); 
+        int total_entry = current_entry + average_entry;
         if(total_entry < MAX_ENTRY && ROM_NUM < PAGE_NUM){
             ROM_NUM ++;
             return false;
